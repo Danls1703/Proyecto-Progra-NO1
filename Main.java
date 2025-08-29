@@ -9,34 +9,76 @@ import java.util.Scanner;
 public class Main {
     public static void main(String[] args) {
         
-        Deporte natacion = new Deporte();
-        natacion.setEspecialidad("Acuatico");
-        natacion.setTipo("Estilo libre");
-        
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.println("--- Ingrese los datos del atleta ---");
+        System.out.print("Nombre: ");
+        String nombreAtleta = scanner.nextLine();
+        System.out.print("Apellido: ");
+        String apellidoAtleta = scanner.nextLine();
+        System.out.print("País: ");
+        String paisAtleta = scanner.nextLine();
+        System.out.print("Edad: ");
+        int edadAtleta = scanner.nextInt();
+        scanner.nextLine();
+
+        System.out.print("Deporte (ej: Natacion, Atletismo): ");
+        String nombreDeporte = scanner.nextLine();
+        System.out.print("Especialidad del Deporte (ej: Acuatico, Pista): ");
+        String especialidadDeporte = scanner.nextLine();
+        System.out.print("Tipo de Deporte (ej: Estilo libre, 100m lisos): ");
+        String tipoDeporte = scanner.nextLine();
+
+        Deporte deporte = new Deporte();
+        deporte.setEspecialidad(especialidadDeporte);
+        deporte.setTipo(tipoDeporte);
+
         Atleta miAtleta = new Atleta();
-        miAtleta.registrar("Marta", "Wendi", "España", 25, "Natacion");
-        miAtleta.setDeporte(natacion);
-        
-        Marca marca1 = new Marca(50.2, "segundos", new Date());
-        Marca marca2 = new Marca(49.8, "segundos", new Date());
+        miAtleta.registrar(nombreAtleta, apellidoAtleta, paisAtleta, edadAtleta, nombreDeporte);
+        miAtleta.setDeporte(deporte);
 
-        SesionEntrenamiento sesion1 = new SesionEntrenamiento();
-        sesion1.setEspecialidad("Natacion");
-        sesion1.setTipo("Resistencia");
-        sesion1.agregarMarcas(marca1);
-        sesion1.agregarMarcas(marca2);
-
+        System.out.println("\n--- Ingrese los datos de la sesión de entrenamiento ---");
+        System.out.print("Especialidad de la sesión (ej: Natacion): ");
+        String especialidadSesion = scanner.nextLine();
+        System.out.print("Tipo de sesión (ej: Resistencia): ");
+        String tipoSesion = scanner.nextLine();
         
-        miAtleta.agregarSesion(sesion1);
+        SesionEntrenamiento sesion = new SesionEntrenamiento();
+        sesion.setEspecialidad(especialidadSesion);
+        sesion.setTipo(tipoSesion);
 
+        System.out.println("\n--- Ingrese las marcas para la sesión ---");
+        System.out.print("Unidad de medida de las marcas (ej: segundos, metros): ");
+        String unidadMarca = scanner.nextLine();
         
+        while (true) {
+            System.out.print("Ingrese el valor de la marca (o 'fin' para terminar): ");
+            String input = scanner.nextLine();
+            if (input.equalsIgnoreCase("fin")) {
+                break;
+            }
+            try {
+                double valorMarca = Double.parseDouble(input);
+                Marca marca = new Marca(valorMarca, unidadMarca, new Date());
+                sesion.agregarMarcas(marca);
+            } catch (NumberFormatException e) {
+                System.out.println("Entrada no válida. Por favor, ingrese un número.");
+            }
+        }
+        
+        miAtleta.agregarSesion(sesion);
+
+        System.out.println("\n--- Estadísticas del Atleta ---");
         miAtleta.estadisticas_debut();
         System.out.println("Deporte del atleta: " + miAtleta.getDeporte().getEspecialidad());
         
-        System.out.println("\n--- Estadísticas de la Sesión ---");
-        System.out.println("Mejor marca: " + sesion1.mejorMarca().getValor() + " " + sesion1.mejorMarca().getUnidad());
-        System.out.println("Promedio de marcas: " + sesion1.promedio() + " " + marca1.getUnidad());
-        
+        if (!sesion.getMarcas().isEmpty()) {
+            System.out.println("\n--- Estadísticas de la Sesión ---");
+            System.out.println("Mejor marca: " + sesion.mejorMarca().getValor() + " " + sesion.mejorMarca().getUnidad());
+            System.out.println("Promedio de marcas: " + sesion.promedio() + " " + unidadMarca);
+        } else {
+            System.out.println("\nNo se ingresaron marcas para esta sesión.");
+        }
         
         guardarAtleta(miAtleta, "atleta.json");
         
@@ -45,9 +87,10 @@ public class Main {
             System.out.println("\n--- Atleta cargado desde archivo ---");
             atletaCargado.estadisticas_debut();
         }
+
+        scanner.close();
     }
 
-    
     public static void guardarAtleta(Atleta atleta, String nombreArchivo) {
         ObjectMapper mapper = new ObjectMapper();
         try {
@@ -58,13 +101,12 @@ public class Main {
         }
     }
 
-    
     public static Atleta cargarAtleta(String nombreArchivo) {
         ObjectMapper mapper = new ObjectMapper();
         try {
             return mapper.readValue(new File(nombreArchivo), Atleta.class);
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println("Error al cargar el archivo. Asegúrese de que existe y es válido.");
             return null;
         }
     }
